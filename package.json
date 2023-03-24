@@ -1,0 +1,14 @@
+{
+  "name": "neon-latency-dash",
+  "version": "0.1.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "gen-vercel-regions": "jq 'keys_unsorted[]' vercel-regions.json | xargs -I @ sed \"s|// nearest region|regions: ['@']|;w api/@.ts\" api/nearest.ts"
+  },
+  "author": "George MacKerron",
+  "license": "ISC",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.2.8"
+  }
+}

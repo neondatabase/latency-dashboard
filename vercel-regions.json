@@ -1,0 +1,110 @@
+{
+  "arn1": {
+    "name": "eu-north-1",
+    "location": "Stockholm, Sweden",
+    "longitude": 17.918600082397,
+    "latitude": 59.651901245117
+  },
+  "bom1": {
+    "name": "ap-south-1",
+    "location": "Mumbai, India",
+    "longitude": 72.8678970337,
+    "latitude": 19.0886993408
+  },
+  "cdg1": {
+    "name": "eu-west-3",
+    "location": "Paris, France",
+    "longitude": 2.55,
+    "latitude": 49.012798
+  },
+  "cle1": {
+    "name": "us-east-2",
+    "location": "Cleveland, USA",
+    "longitude": -81.8498001099,
+    "latitude": 41.4117012024
+  },
+  "cpt1": {
+    "name": "af-south-1",
+    "location": "Cape Town, South Africa",
+    "longitude": 18.6016998291,
+    "latitude": -33.9648017883
+  },
+  "dub1": {
+    "name": "eu-west-1",
+    "location": "Dublin, Ireland",
+    "longitude": -6.262121,
+    "latitude": 53.428713
+  },
+  "fra1": {
+    "name": "eu-central-1",
+    "location": "Frankfurt, Germany",
+    "longitude": 8.561268,
+    "latitude": 50.036521
+  },
+  "gru1": {
+    "name": "sa-east-1",
+    "location": "São Paulo, Brazil",
+    "longitude": -46.467778,
+    "latitude": -23.431944
+  },
+  "hkg1": {
+    "name": "ap-east-1",
+    "location": "Hong Kong",
+    "longitude": 113.915001,
+    "latitude": 22.308901
+  },
+  "hnd1": {
+    "name": "ap-northeast-1",
+    "location": "Tokyo, Japan",
+    "longitude": 139.779999,
+    "latitude": 35.552299
+  },
+  "iad1": {
+    "name": "us-east-1",
+    "location": "Washington, D.C., USA",
+    "longitude": -77.455803,
+    "latitude": 38.9445
+  },
+  "icn1": {
+    "name": "ap-northeast-2",
+    "location": "Seoul, South Korea",
+    "longitude": 126.45099639892578,
+    "latitude": 37.46910095214844
+  },
+  "kix1": {
+    "name": "ap-northeast-3",
+    "location": "Osaka, Japan",
+    "longitude": 135.244003,
+    "latitude": 34.427299
+  },
+  "lhr1": {
+    "name": "eu-west-2",
+    "location": "London, United Kingdom",
+    "longitude": -0.461941,
+    "latitude": 51.4706
+  },
+  "pdx1": {
+    "name": "us-west-2",
+    "location": "Portland, USA",
+    "longitude": -122.5979996,
+    "latitude": 45.58869934
+  },
+  "sfo1": {
+    "name": "us-west-1",
+    "location": "San Francisco, USA",
+    "longitude": -122.375,
+    "latitude": 37.61899948120117
+  },
+  "sin1": {
+    "name": "ap-southeast-1",
+    "location": "Singapore",
+    "longitude": 103.994003,
+    "latitude": 1.35019
+  },
+  "syd1": {
+    "name": "ap-southeast-2",
+    "location": "Sydney, Australia",
+    "longitude": 151.177001953125,
+    "latitude": -33.94609832763672
+  }
+}
