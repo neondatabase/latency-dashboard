@@ -1,6 +1,6 @@
-import { Pool } from '@neondatabase/serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
 
-const dataError = () => new Response('Expected a POSTed JSON object like { "trials": 1, "database": "postgres://..." }', { status: 400 });
+const dataError = () => new Response('Expected a POSTed JSON object like { "trials": 1, "database": "postgres://...", "pipelineConnect": "password" }', { status: 400 });
 
 export default async (req: Request, ctx: any) => {
   // parse POSTed JSON
@@ -9,7 +9,7 @@ export default async (req: Request, ctx: any) => {
   catch (err) { return dataError(); }
 
   // validate POSTed JSON values
-  const { database, trials } = json;
+  const { database, trials, pipelineConnect } = json;
   if (
     typeof trials !== 'number' ||
     typeof database !== 'string' ||
@@ -21,6 +21,7 @@ export default async (req: Request, ctx: any) => {
   const count = trials < 1 ? 1 : trials > 21 ? 21 : trials;
   const durations = new Array(count);
   const results = new Array(count);
+  neonConfig.pipelineConnect = pipelineConnect;
 
   // do the connection trials
   for (let i = 0; i < count; i++) {
