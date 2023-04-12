@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Card, Text, Subtitle, Bold, TextInput, Flex, Badge, TabList, Tab, Table, TableBody, TableRow, TableCell, TableHead, Button, Toggle, ToggleItem } from '@tremor/react';
+import { Card, Text, Title, TextInput, Flex, Badge, TabList, Tab, Table, TableBody, TableRow, TableCell, TableHead, Button, Toggle, ToggleItem } from '@tremor/react';
 import haversine from 'haversine';
 
 import { regionFromNeonUrl } from '../util/neonUrl';
@@ -127,6 +127,7 @@ export default function Page() {
 
   return (
     <main>
+      <Title className='mb-5'>Neon latencies — work in progress</Title>
       <label htmlFor='dbUrl' className='grow'><Text className='mb-1'>Neon connection string</Text></label>
       <TextInput
         id='dbUrl'
