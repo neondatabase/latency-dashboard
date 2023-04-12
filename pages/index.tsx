@@ -167,7 +167,14 @@ export default function Page() {
         <TableHead><TableRow>
           <TableCell className='w-12'>Region</TableCell>
           <TableCell className='w-10'>Distance</TableCell>
-          <TableCell>Latencies (ms)</TableCell>
+          <TableCell>
+            Latencies (ms) and percentiles:
+            <Badge className='font-normal ml-1 mr-1' color='green'>5</Badge>
+            <Badge className='font-normal ml-1 mr-1' color='gray'>25</Badge>
+            <Badge className='font-normal ml-1 mr-1' color='blue'>50</Badge>
+            <Badge className='font-normal ml-1 mr-1' color='gray'>75</Badge>
+            <Badge className='font-normal ml-1 mr-1' color='orange'>95</Badge>
+          </TableCell>
         </TableRow></TableHead>
         <TableBody>
           {vercelRegionIds.map(vercelRegionId =>
