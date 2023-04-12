@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Text, TextInput, Flex, Badge, TabList, Tab, Table, TableBody, TableRow, TableCell, TableHead, Button } from '@tremor/react';
+import { Card, Text, Subtitle, Bold, TextInput, Flex, Badge, TabList, Tab, Table, TableBody, TableRow, TableCell, TableHead, Button, Toggle, ToggleItem } from '@tremor/react';
 import haversine from 'haversine';
 
 import { regionFromNeonUrl } from '../util/neonUrl';
@@ -13,10 +13,9 @@ type VercelRegions = typeof vercelRegions;
 type VercelRegion = keyof VercelRegions;
 type VercelRegionsWithDistance = { [RegionId in VercelRegion]: VercelRegions[RegionId] & { km?: number } };
 
-enum DisplayLatency {  // binary
-  ClientToEdge = 1,
-  EdgeToNeon = 2,
-  Combined = 3,  // = ClientToEdge + EdgeToNeon
+enum DisplayLatency {
+  EdgeToNeon = 'edgeToNeon',
+  Total = 'total',
 }
 
 enum RunStage {
@@ -31,7 +30,7 @@ enum EdgeProvider {
 
 const errIntro = 'Sorry, an error occured.';
 const emptyLatencies = Object.fromEntries(
-  Object.entries(vercelRegions).map(([k]) => [k, { clientToEdge: [] as number[], edgeToNeon: [] as number[] }])
+  Object.entries(vercelRegions).map(([k]) => [k, { total: [] as number[], edgeToNeon: [] as number[] }])
 );
 
 export default function Page() {
@@ -113,8 +112,8 @@ export default function Page() {
           setLatencies(latencies => ({
             ...latencies,
             [vercelRegionId]: {
-              clientToEdge: [...latencies[vercelRegionId].clientToEdge, duration],
-              edgeToNeon: [...latencies[vercelRegionId].clientToEdge, ...data.durations],
+              total: [...latencies[vercelRegionId].total, duration],
+              edgeToNeon: [...latencies[vercelRegionId].edgeToNeon, ...data.durations],
             }
           }));
         }
@@ -168,7 +167,13 @@ export default function Page() {
         <TableHead><TableRow>
           <TableCell className='w-12'>Region</TableCell>
           <TableCell className='w-10'>Distance</TableCell>
-          <TableCell>Latencies (ms) and percentiles &nbsp; <TextPercentiles /></TableCell>
+          <TableCell>
+            Latency (ms):
+            <Toggle value={displayLatency} onValueChange={(value: DisplayLatency) => setDisplayLatency(value)} className='ml-2'>
+              <ToggleItem value={DisplayLatency.EdgeToNeon} text='Edge &lt;&gt; Neon' />
+              <ToggleItem value={DisplayLatency.Total} text='Here &lt;&gt; Edge &lt;&gt; Neon' />
+            </Toggle>
+          </TableCell>
         </TableRow></TableHead>
         <TableBody>
           {vercelRegionIds.map(vercelRegionId =>
@@ -182,13 +187,18 @@ export default function Page() {
               </TableCell>
               <TableCell>
                 {latencies[vercelRegionId].edgeToNeon.length > 0 ?
-                  <TextLatencies values={latencies[vercelRegionId].edgeToNeon} total={queryCount} /> :
+                  <TextLatencies values={latencies[vercelRegionId][displayLatency]} total={queryCount} /> :
                   runStage === RunStage.Latencies ? 'Waiting ...' : '—'}
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
+      <Card className='mt-5'><Flex>
+        <Text className='mr-3'><b>Key to percentiles:</b></Text>
+        <TextPercentiles />
+        <span className='grow'></span>
+      </Flex></Card>
     </main>
   );
 }
