@@ -1,8 +1,8 @@
-import handler from '../handler';
+import handler from '../../edge-latency';
 
 export const config = {
   runtime: 'edge',
-  regions: ['syd1']
+  regions: ['icn1']
 };
 
 export default async (req: Request, ctx: any) => handler(req, ctx);

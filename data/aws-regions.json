@@ -1,0 +1,128 @@
+{
+  "us-east-1": {
+    "name": "us-east-1",
+    "location": "Virginia",
+    "longitude": -78.45,
+    "latitude": 38.13
+  },
+  "us-east-2": {
+    "name": "us-east-2",
+    "location": "Ohio",
+    "longitude": -83,
+    "latitude": 39.96
+  },
+  "eu-north-1": {
+    "name": "eu-north-1",
+    "location": "Stockholm",
+    "longitude": 17.81,
+    "latitude": 59.25
+  },
+  "eu-south-1": {
+    "name": "eu-south-1",
+    "location": "Milan",
+    "longitude": 9.29,
+    "latitude": 45.43
+  },
+  "us-west-1": {
+    "name": "us-west-1",
+    "location": "California",
+    "longitude": -121.96,
+    "latitude": 37.35
+  },
+  "us-west-2": {
+    "name": "us-west-2",
+    "location": "Oregon",
+    "longitude": -123.88,
+    "latitude": 46.15
+  },
+  "eu-west-1": {
+    "name": "eu-west-1",
+    "location": "Ireland",
+    "longitude": -8,
+    "latitude": 53
+  },
+  "eu-west-2": {
+    "name": "eu-west-2",
+    "location": "London",
+    "longitude": -0.1,
+    "latitude": 51
+  },
+  "eu-west-3": {
+    "name": "eu-west-3",
+    "location": "Paris",
+    "longitude": 2.35,
+    "latitude": 48.86
+  },
+  "eu-central-1": {
+    "name": "eu-central-1",
+    "location": "Frankfurt",
+    "longitude": 8,
+    "latitude": 50
+  },
+  "sa-east-1": {
+    "name": "sa-east-1",
+    "location": "Sao Paulo",
+    "longitude": -46.38,
+    "latitude": -23.34
+  },
+  "ap-southeast-1": {
+    "name": "ap-southeast-1",
+    "location": "Singapore",
+    "longitude": 103.8,
+    "latitude": 1.37
+  },
+  "ap-southeast-2": {
+    "name": "ap-southeast-2",
+    "location": "Sydney",
+    "longitude": 151.2,
+    "latitude": -33.86
+  },
+  "ap-northeast-1": {
+    "name": "ap-northeast-1",
+    "location": "Tokyo",
+    "longitude": 139.42,
+    "latitude": 35.41
+  },
+  "ap-northeast-2": {
+    "name": "ap-northeast-2",
+    "location": "Seoul",
+    "longitude": 126.98,
+    "latitude": 37.56
+  },
+  "ap-northeast-3": {
+    "name": "ap-northeast-3",
+    "location": "Osaka",
+    "longitude": 135.49,
+    "latitude": 34.69
+  },
+  "ap-south-1": {
+    "name": "ap-south-1",
+    "location": "Mumbai",
+    "longitude": 72.88,
+    "latitude": 19.08
+  },
+  "ca-central-1": {
+    "name": "ca-central-1",
+    "location": "Canada Central",
+    "longitude": -73.6,
+    "latitude": 45.5
+  },
+  "ap-east-1": {
+    "name": "ap-east-1",
+    "location": "Hong Kong",
+    "longitude": 114.16,
+    "latitude": 22.27
+  },
+  "me-south-1": {
+    "name": "me-south-1",
+    "location": "Bahrain",
+    "longitude": 50.46,
+    "latitude": 26.10
+  },
+  "af-south-1": {
+    "name": "af-south-1",
+    "location": "South Africa",
+    "longitude": 18.42,
+    "latitude": -33.93
+  }
+}

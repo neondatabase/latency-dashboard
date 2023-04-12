@@ -24,14 +24,18 @@ export default async (req: Request, ctx: any) => {
   neonConfig.pipelineConnect = pipelineConnect;
 
   // do the connection trials
-  for (let i = 0; i < count; i++) {
-    const t0 = Date.now();
-    const pool = new Pool({ connectionString });
-    const { rows: [{ now }] } = await pool.query(`SELECT now()`);
-    durations[i] = Date.now() - t0;
-    results[i] = now;
-    ctx.waitUntil(pool.end());
-  }
+  try {
+    for (let i = 0; i < count; i++) {
+      const t0 = Date.now();
+      const pool = new Pool({ connectionString });
+      const { rows: [{ now }] } = await pool.query('SELECT now()');
+      durations[i] = Date.now() - t0;
+      results[i] = now;
+      ctx.waitUntil(pool.end());
+    }
+    return new Response(JSON.stringify({ durations, results }));
 
-  return new Response(JSON.stringify({ durations, results }));
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  }
 }

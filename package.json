@@ -4,11 +4,38 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "gen-vercel-regions": "jq 'keys_unsorted[]' vercel-regions.json | xargs -I @ sed \"s|// nearest region|regions: ['@']|;w api/@.ts\" api/nearest.ts"
+    "gen-vercel-regions": "jq 'keys_unsorted[]' data/vercel-regions.json | xargs -I @ sed \"s|// nearest region|regions: ['@']|;w pages/api/@.ts\" pages/api/nearest.ts",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "author": "George MacKerron",
   "license": "ISC",
   "dependencies": {
-    "@neondatabase/serverless": "^0.2.8"
+    "@neondatabase/serverless": "^0.2.8",
+    "@tremor/react": "^2.1.0",
+    "@types/react": "^18.0.34",
+    "@types/react-dom": "^18.0.11",
+    "haversine": "^1.1.1",
+    "next": "^13.3.0",
+    "plotly.js": "^2.20.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-plotly.js": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "18.15.11",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.3.1",
+    "typescript": "5.0.4"
+  },
+  "npm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "prop-types"
+      ]
+    }
   }
 }
