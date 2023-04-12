@@ -7,8 +7,7 @@ import awsRegions from '../data/aws-regions.json';
 import vercelRegions from '../data/vercel-regions.json';
 import neonIcon from '../components/neon-icon';
 import TextLatencies from '@/components/text-latencies';
-
-const localMock = true;
+import TextPercentiles from '@/components/text-percentiles';
 
 type VercelRegions = typeof vercelRegions;
 type VercelRegion = keyof VercelRegions;
@@ -43,6 +42,8 @@ export default function Page() {
   const [displayLatency, setDisplayLatency] = useState(DisplayLatency.EdgeToNeon);
   const [queryCount, setQueryCount] = useState(21);
   const [latencies, setLatencies] = useState(emptyLatencies);
+
+  const localMock = typeof location === 'object' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
 
   const neonAwsRegionId = useMemo(() => regionFromNeonUrl(dbUrl), [dbUrl]);
   const neonAwsRegion = neonAwsRegionId && awsRegions[neonAwsRegionId];
@@ -167,14 +168,7 @@ export default function Page() {
         <TableHead><TableRow>
           <TableCell className='w-12'>Region</TableCell>
           <TableCell className='w-10'>Distance</TableCell>
-          <TableCell>
-            Latencies (ms) and percentiles:
-            <Badge className='font-normal ml-1 mr-1' color='green'>5</Badge>
-            <Badge className='font-normal ml-1 mr-1' color='gray'>25</Badge>
-            <Badge className='font-normal ml-1 mr-1' color='blue'>50</Badge>
-            <Badge className='font-normal ml-1 mr-1' color='gray'>75</Badge>
-            <Badge className='font-normal ml-1 mr-1' color='orange'>95</Badge>
-          </TableCell>
+          <TableCell>Latencies (ms) and percentiles &nbsp; <TextPercentiles /></TableCell>
         </TableRow></TableHead>
         <TableBody>
           {vercelRegionIds.map(vercelRegionId =>
@@ -187,11 +181,9 @@ export default function Page() {
                 <Text>{neonAwsRegionId ? Number(vercelRegionsWithDistance[vercelRegionId].km.toPrecision(2)) + ' km' : '—'}</Text>
               </TableCell>
               <TableCell>
-                <Text>
-                  {latencies[vercelRegionId].edgeToNeon.length > 0 ?
-                    <TextLatencies values={latencies[vercelRegionId].edgeToNeon} total={queryCount} /> :
-                    runStage === RunStage.Latencies ? 'Waiting ...' : '—'}
-                </Text>
+                {latencies[vercelRegionId].edgeToNeon.length > 0 ?
+                  <TextLatencies values={latencies[vercelRegionId].edgeToNeon} total={queryCount} /> :
+                  runStage === RunStage.Latencies ? 'Waiting ...' : '—'}
               </TableCell>
             </TableRow>
           )}
