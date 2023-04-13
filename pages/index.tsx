@@ -33,6 +33,8 @@ const emptyLatencies = Object.fromEntries(
   Object.entries(vercelRegions).map(([k]) => [k, { total: [] as number[], edgeToNeon: [] as number[] }])
 );
 
+const formatKm = (km: number) => (km < 100 ? '< 100' : Number(km.toPrecision(2))) + ' km';
+
 export default function Page() {
   const [edgeProvider, setEdgeProvider] = useState(EdgeProvider.Vercel);
   const [dbUrl, setDbUrl] = useState('');
@@ -92,9 +94,9 @@ export default function Page() {
           let duration;
 
           if (localMock) {
-            duration = 5 + Math.random() * 20;
-            const tEdgeToNeon = 5 + Math.random() * 20;
-            await new Promise(resolve => setTimeout(resolve, duration + tEdgeToNeon));
+            const tEdgeToNeon = 5 + 10 * Math.random() + (2 + Math.random()) * vercelRegionsWithDistance[vercelRegionId].km / 30;
+            duration = tEdgeToNeon + 10 + Math.random() * 50;
+            await new Promise(resolve => setTimeout(resolve, duration));
             data = { durations: [tEdgeToNeon] };
 
           } else {
@@ -184,7 +186,7 @@ export default function Page() {
                 <Text className='inline-block'>{vercelRegionsWithDistance[vercelRegionId].location}</Text>
               </TableCell>
               <TableCell>
-                <Text>{neonAwsRegionId ? Number(vercelRegionsWithDistance[vercelRegionId].km.toPrecision(2)) + ' km' : '—'}</Text>
+                <Text>{neonAwsRegionId ? formatKm(vercelRegionsWithDistance[vercelRegionId].km) : '—'}</Text>
               </TableCell>
               <TableCell>
                 {latencies[vercelRegionId].edgeToNeon.length > 0 ?
