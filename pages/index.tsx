@@ -183,10 +183,9 @@ export default function Page() {
           <TableCell className='w-12'>Region</TableCell>
           <TableCell className='w-10'>Distance</TableCell>
           <TableCell>
-            Latency (ms):
             <Toggle value={displayLatency} onValueChange={(value: DisplayLatency) => setDisplayLatency(value)} className='ml-2'>
-              <ToggleItem value={DisplayLatency.EdgeToNeon} text='Edge &lt;&gt; Neon' />
-              <ToggleItem value={DisplayLatency.Total} text='Here &lt;&gt; Edge &lt;&gt; Neon' />
+              <ToggleItem value={DisplayLatency.EdgeToNeon} text='Edge &lt;&gt; Neon RTT (ms)' />
+              <ToggleItem value={DisplayLatency.Total} text='Browser &lt;&gt; Edge &lt;&gt; Neon RTT (ms)' />
             </Toggle>
           </TableCell>
         </TableRow></TableHead>
