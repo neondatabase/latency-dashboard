@@ -11,7 +11,7 @@ import TextPercentiles from '@/components/text-percentiles';
 
 type VercelRegions = typeof vercelRegions;
 type VercelRegion = keyof VercelRegions;
-type VercelRegionsWithDistance = { [RegionId in VercelRegion]: VercelRegions[RegionId] & { km?: number } };
+type VercelRegionsWithDistance = { [RegionId in VercelRegion]: VercelRegions[RegionId] & { neonKm?: number; clientKm?: number; } };
 
 enum DisplayLatency {
   EdgeToNeon = 'edgeToNeon',
@@ -33,11 +33,12 @@ const emptyLatencies = Object.fromEntries(
   Object.entries(vercelRegions).map(([k]) => [k, { total: [] as number[], edgeToNeon: [] as number[] }])
 );
 
-const formatKm = (km: number) => (km < 100 ? '< 100' : Number(km.toPrecision(2))) + ' km';
+const formatKm = (km: number) => km < 0 ? '—' : (km < 100 ? '< 100' : Number(km.toPrecision(2)));
 
 export default function Page() {
   const [edgeProvider, setEdgeProvider] = useState(EdgeProvider.Vercel);
   const [dbUrl, setDbUrl] = useState('');
+  const [clientLocation, setClientLocation] = useState({ city: undefined, longitude: null, latitude: null });
   const [runStage, setRunStage] = useState(RunStage.Idle);
   const [errMsg, setErrMsg] = useState('');
   const [displayLatency, setDisplayLatency] = useState(DisplayLatency.EdgeToNeon);
@@ -49,16 +50,19 @@ export default function Page() {
   const neonAwsRegionId = useMemo(() => regionFromNeonUrl(dbUrl), [dbUrl]);
   const neonAwsRegion = neonAwsRegionId && awsRegions[neonAwsRegionId];
 
-  // get km distance to each Vercel region from Neon DB
+  // get km distance to each Vercel region from Neon DB and browser
   const vercelRegionsWithDistance = useMemo(() =>
-    Object.fromEntries(Object.entries(vercelRegions).map(([vercelRegionId, vercelRegion]) =>
-      [vercelRegionId, { ...vercelRegion, km: neonAwsRegion ? haversine(vercelRegion, neonAwsRegion) : 0 }])),
-    [neonAwsRegionId]) as VercelRegionsWithDistance;
+    Object.fromEntries(Object.entries(vercelRegions).map(([vercelRegionId, vercelRegion]) => [vercelRegionId, {
+      ...vercelRegion,
+      neonKm: neonAwsRegion ? haversine(vercelRegion, neonAwsRegion) : -1,
+      clientKm: clientLocation.latitude ? haversine(vercelRegion, clientLocation) : -1,
+    }])),
+    [neonAwsRegionId, clientLocation]) as VercelRegionsWithDistance;
 
   // extract and sort region keys by distance (ascending)
   const vercelRegionIds = Object.keys(vercelRegions) as VercelRegion[];
   if (neonAwsRegion) vercelRegionIds.sort((a, b) =>
-    vercelRegionsWithDistance[a].km - vercelRegionsWithDistance[b].km);
+    vercelRegionsWithDistance[a].neonKm - vercelRegionsWithDistance[b].neonKm);
 
   const showError = (source: 'Browser' | 'Server', msg: string) => {
     setErrMsg(`${errIntro} ${source}: ${msg}`);
@@ -67,7 +71,11 @@ export default function Page() {
 
   const testConnection = async () => {
     setLatencies(emptyLatencies);
-    if (localMock) return checkLatencies();
+    if (localMock) {
+      setClientLocation({ city: 'London', longitude: 0, latitude: 51.5 });
+      return checkLatencies();
+    }
+
     try {
       setRunStage(RunStage.ConnectionTest);
       const res = await fetch('/api/nearest', {
@@ -77,7 +85,7 @@ export default function Page() {
       });
       const data = await res.json();
       if (data.error) return showError('Server', data.error);
-
+      setClientLocation(data.location);
       checkLatencies();
 
     } catch (err) {
@@ -91,43 +99,43 @@ export default function Page() {
       for (let i = 0; i < queryCount; i++) {
 
         void (async function () {  // don't await this
-          let data, duration;
+          let data, tTotal;
 
           try {
             if (localMock) {
-              const tEdgeToNeon = 5 + 10 * Math.random() + (2 + Math.random()) * vercelRegionsWithDistance[vercelRegionId].km / 30;
-              duration = tEdgeToNeon + 10 + Math.random() * 50;
-              await new Promise(resolve => setTimeout(resolve, duration));
-              if (Math.random() < .01) throw new Error('Mock error: browser');
-              data = Math.random() < .01 ? { error: 'Mock error: server' } : { durations: [tEdgeToNeon] };
+              const tEdgeToNeon = 5 + 10 * Math.random() + (2 + Math.random()) * vercelRegionsWithDistance[vercelRegionId].neonKm / 30;
+              tTotal = tEdgeToNeon + 10 + Math.random() * 50;
+              await new Promise(resolve => setTimeout(resolve, tTotal));
+              if (Math.random() < .005) throw new Error('Mock error: browser');
+              data = Math.random() < .005 ? { error: 'Mock error: server' } : { durations: [tEdgeToNeon] };
 
             } else {
               const t0 = Date.now();
               const res = await fetch(`/api/${vercelRegionId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ trials: 1, database: dbUrl, pipelineConnect: "password" }),
+                body: JSON.stringify({ trials: 1, database: dbUrl, pipelineConnect: 'password' }),
               });
-              duration = Date.now() - t0;
+              tTotal = Date.now() - t0;
               data = await res.json();
             }
 
             if (data.error) {
               console.error(data.error);
               data.durations = [-1];
-              duration = -1;
+              tTotal = -1;
             }
 
           } catch (err) {
             console.error(err.message);
             data = { durations: [-2] };
-            duration = -2;
+            tTotal = -2;
           }
 
           setLatencies(latencies => ({
             ...latencies,
             [vercelRegionId]: {
-              total: [...latencies[vercelRegionId].total, duration],
+              total: [...latencies[vercelRegionId].total, tTotal],
               edgeToNeon: [...latencies[vercelRegionId].edgeToNeon, ...data.durations],
             }
           }));
@@ -157,16 +165,17 @@ export default function Page() {
         }}
         className='mr-2' />
 
-      {neonAwsRegionId !== undefined && <Flex className='mt-1'>
+      {neonAwsRegionId !== undefined && <Flex>
         <Badge className='mr-2' color={neonAwsRegionId ? 'blue' : 'gray'}>{neonAwsRegionId ? neonAwsRegion.name : 'n/a'}</Badge>
-        <Text className='grow'>{neonAwsRegionId ? neonAwsRegion.location : 'Incomplete or invalid connection string'}</Text>
-
+        <Text>{neonAwsRegionId ? neonAwsRegion.location : 'Incomplete or invalid connection string'}</Text>
+        <Text className='ml-4 mr-4'>|</Text>
+        <Text className='grow'>Browser location: {clientLocation.city ?? 'unknown'}</Text>
         <Button
           className='mt-3'
           disabled={!neonAwsRegionId}
           loading={runStage > RunStage.Idle}
           onClick={testConnection}>
-          {runStage === RunStage.Idle ? 'Run tests' :
+          {runStage === RunStage.Idle ? 'Start' :
             runStage === RunStage.ConnectionTest ? 'Connecting ...' :
               'Running ...'}
         </Button>
@@ -181,11 +190,11 @@ export default function Page() {
       <Table>
         <TableHead><TableRow>
           <TableCell className='w-12'>Region</TableCell>
-          <TableCell className='w-10'>Distance</TableCell>
+          <TableCell className='w-10'>Distance (km)</TableCell>
           <TableCell>
             <Toggle value={displayLatency} onValueChange={(value: DisplayLatency) => setDisplayLatency(value)} className='ml-2'>
-              <ToggleItem value={DisplayLatency.EdgeToNeon} text='Edge &lt;&gt; Neon RTT (ms)' />
-              <ToggleItem value={DisplayLatency.Total} text='Browser &lt;&gt; Edge &lt;&gt; Neon RTT (ms)' />
+              <ToggleItem value={DisplayLatency.EdgeToNeon} text={`Edge <> Neon RTT (ms)`} />
+              <ToggleItem value={DisplayLatency.Total} text={`Browser <> Edge <> Neon RTT (ms)`} />
             </Toggle>
           </TableCell>
         </TableRow></TableHead>
@@ -197,7 +206,10 @@ export default function Page() {
                 <Text className='inline-block'>{vercelRegionsWithDistance[vercelRegionId].location}</Text>
               </TableCell>
               <TableCell>
-                <Text>{neonAwsRegionId ? formatKm(vercelRegionsWithDistance[vercelRegionId].km) : '—'}</Text>
+                <Text>
+                  {displayLatency === DisplayLatency.Total && formatKm(vercelRegionsWithDistance[vercelRegionId].clientKm) + ' + '}
+                  {formatKm(vercelRegionsWithDistance[vercelRegionId].neonKm)}
+                </Text>
               </TableCell>
               <TableCell>
                 {latencies[vercelRegionId].edgeToNeon.length > 0 ?

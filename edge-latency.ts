@@ -23,6 +23,13 @@ export default async (req: Request, ctx: any) => {
   const results = new Array(count);
   neonConfig.pipelineConnect = pipelineConnect;
 
+  // get location
+  const location = {
+   city: req.headers.get('x-vercel-ip-city'),
+   longitude: parseFloat(req.headers.get('x-vercel-ip-longitude')),
+   latitude: parseFloat(req.headers.get('x-vercel-ip-latitude')),
+  };
+
   // do the connection trials
   try {
     for (let i = 0; i < count; i++) {
@@ -33,7 +40,7 @@ export default async (req: Request, ctx: any) => {
       results[i] = now;
       ctx.waitUntil(pool.end());
     }
-    return new Response(JSON.stringify({ durations, results }));
+    return new Response(JSON.stringify({ durations, results, location }));
 
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
