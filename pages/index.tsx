@@ -6,8 +6,10 @@ import { regionFromNeonUrl } from '../util/neonUrl';
 import awsRegions from '../data/aws-regions.json';
 import vercelRegions from '../data/vercel-regions.json';
 import neonIcon from '../components/neon-icon';
-import TextLatencies from '@/components/text-latencies';
-import TextPercentiles from '@/components/text-percentiles';
+import TextLatencies from '../components/text-latencies';
+import PlotLatencies from '../components/plot-latencies';
+import TextPercentiles from '../components/text-percentiles';
+
 
 type VercelRegions = typeof vercelRegions;
 type VercelRegion = keyof VercelRegions;
@@ -64,6 +66,12 @@ export default function Page() {
   if (neonAwsRegion) vercelRegionIds.sort((a, b) =>
     vercelRegionsWithDistance[a].neonKm - vercelRegionsWithDistance[b].neonKm);
 
+  // calculate maximum latencies
+  const latencyMax = useMemo(() =>
+    Object.values(latencies).reduce((memo, l) => Math.max(memo, ...l[displayLatency]), 0),
+    [latencies, displayLatency]
+  );
+
   const showError = (source: 'Browser' | 'Server', msg: string) => {
     setErrMsg(`${errIntro} ${source}: ${msg}`);
     setRunStage(RunStage.Idle);
@@ -98,7 +106,7 @@ export default function Page() {
     for (const vercelRegionId of vercelRegionIds) {
       for (let i = 0; i < queryCount; i++) {
 
-        void (async function () {  // don't await this
+        void (async function () {  // we don't await this ...
           let data, tTotal;
 
           try {
@@ -141,7 +149,7 @@ export default function Page() {
           }));
         })();
 
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, 50));  // ... but we do pause between each request
       }
     }
     setRunStage(RunStage.Idle);
@@ -189,7 +197,7 @@ export default function Page() {
 
       <Table>
         <TableHead><TableRow>
-          <TableCell className='w-12'>Region</TableCell>
+          <TableCell className='w-12'>Edge region</TableCell>
           <TableCell className='w-10'>Distance (km)</TableCell>
           <TableCell>
             <Toggle value={displayLatency} onValueChange={(value: DisplayLatency) => setDisplayLatency(value)} className='ml-2'>
@@ -198,6 +206,7 @@ export default function Page() {
             </Toggle>
           </TableCell>
         </TableRow></TableHead>
+
         <TableBody>
           {vercelRegionIds.map(vercelRegionId =>
             <TableRow key={vercelRegionId}>
@@ -213,7 +222,8 @@ export default function Page() {
               </TableCell>
               <TableCell>
                 {latencies[vercelRegionId].edgeToNeon.length > 0 ?
-                  <TextLatencies values={latencies[vercelRegionId][displayLatency]} total={queryCount} /> :
+                  <PlotLatencies values={latencies[vercelRegionId][displayLatency]} max={latencyMax} total={queryCount} />
+                  /*<TextLatencies values={latencies[vercelRegionId][displayLatency]} total={queryCount} />*/ :
                   runStage === RunStage.Latencies ? 'Waiting ...' : '—'}
               </TableCell>
             </TableRow>
