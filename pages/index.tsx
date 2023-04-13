@@ -86,29 +86,42 @@ export default function Page() {
   };
 
   const checkLatencies = async () => {
-    try {
-      setRunStage(RunStage.Latencies);
-      for (const vercelRegionId of vercelRegionIds) {
-        for (let i = 0; i < queryCount; i++) {
-          let data;
-          let duration;
+    setRunStage(RunStage.Latencies);
+    for (const vercelRegionId of vercelRegionIds) {
+      for (let i = 0; i < queryCount; i++) {
 
-          if (localMock) {
-            const tEdgeToNeon = 5 + 10 * Math.random() + (2 + Math.random()) * vercelRegionsWithDistance[vercelRegionId].km / 30;
-            duration = tEdgeToNeon + 10 + Math.random() * 50;
-            await new Promise(resolve => setTimeout(resolve, duration));
-            data = { durations: [tEdgeToNeon] };
+        void (async function () {  // don't await this
+          let data, duration;
 
-          } else {
-            const t0 = Date.now();
-            const res = await fetch(`/api/${vercelRegionId}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ trials: 1, database: dbUrl, pipelineConnect: "password" }),
-            });
-            duration = Date.now() - t0;
-            data = await res.json();
-            if (data.error) return showError('Server', data.error);
+          try {
+            if (localMock) {
+              const tEdgeToNeon = 5 + 10 * Math.random() + (2 + Math.random()) * vercelRegionsWithDistance[vercelRegionId].km / 30;
+              duration = tEdgeToNeon + 10 + Math.random() * 50;
+              await new Promise(resolve => setTimeout(resolve, duration));
+              if (Math.random() < .01) throw new Error('Mock error: browser');
+              data = Math.random() < .01 ? { error: 'Mock error: server' } : { durations: [tEdgeToNeon] };
+
+            } else {
+              const t0 = Date.now();
+              const res = await fetch(`/api/${vercelRegionId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ trials: 1, database: dbUrl, pipelineConnect: "password" }),
+              });
+              duration = Date.now() - t0;
+              data = await res.json();
+            }
+
+            if (data.error) {
+              console.error(data.error);
+              data.durations = [-1];
+              duration = -1;
+            }
+
+          } catch (err) {
+            console.error(err.message);
+            data = { durations: [-2] };
+            duration = -2;
           }
 
           setLatencies(latencies => ({
@@ -118,13 +131,12 @@ export default function Page() {
               edgeToNeon: [...latencies[vercelRegionId].edgeToNeon, ...data.durations],
             }
           }));
-        }
-      }
-      setRunStage(RunStage.Idle);
+        })();
 
-    } catch (err) {
-      showError('Browser', err.message);
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     }
+    setRunStage(RunStage.Idle);
   };
 
   return (
