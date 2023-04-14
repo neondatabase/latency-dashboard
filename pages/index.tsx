@@ -35,7 +35,7 @@ const emptyLatencies = Object.fromEntries(
   Object.entries(vercelRegions).map(([k]) => [k, { total: [] as number[], edgeToNeon: [] as number[] }])
 );
 
-const formatKm = (km: number) => km < 0 ? '—' : (km < 100 ? '< 100' : Number(km.toPrecision(2)));
+const formatKm = (km: number, units = true) => km < 0 ? '—' : (km < 100 ? '< 100' : Number(km.toPrecision(2))) + (units ? ' km' : '');
 
 export default function Page() {
   const [edgeProvider, setEdgeProvider] = useState(EdgeProvider.Vercel);
@@ -198,11 +198,12 @@ export default function Page() {
       <Table>
         <TableHead><TableRow>
           <TableCell className='w-12'>Edge region</TableCell>
-          <TableCell className='w-10'>Distance (km)</TableCell>
+          <TableCell className='w-12'>Distance</TableCell>
           <TableCell>
+            RTT (ms)
             <Toggle value={displayLatency} onValueChange={(value: DisplayLatency) => setDisplayLatency(value)} className='ml-2'>
-              <ToggleItem value={DisplayLatency.EdgeToNeon} text={`Edge <> Neon RTT (ms)`} />
-              <ToggleItem value={DisplayLatency.Total} text={`Browser <> Edge <> Neon RTT (ms)`} />
+              <ToggleItem value={DisplayLatency.EdgeToNeon} text={`Edge <> Neon`} />
+              <ToggleItem value={DisplayLatency.Total} text={`Browser <> Edge <> Neon`} />
             </Toggle>
           </TableCell>
         </TableRow></TableHead>
@@ -216,11 +217,11 @@ export default function Page() {
               </TableCell>
               <TableCell>
                 <Text>
-                  {displayLatency === DisplayLatency.Total && formatKm(vercelRegionsWithDistance[vercelRegionId].clientKm) + ' + '}
+                  {displayLatency === DisplayLatency.Total && formatKm(vercelRegionsWithDistance[vercelRegionId].clientKm, false) + ' + '}
                   {formatKm(vercelRegionsWithDistance[vercelRegionId].neonKm)}
                 </Text>
               </TableCell>
-              <TableCell>
+              <TableCell className='p-1 pt-2'>
                 {latencies[vercelRegionId].edgeToNeon.length > 0 ?
                   <PlotLatencies values={latencies[vercelRegionId][displayLatency]} max={latencyMax} total={queryCount} />
                   /*<TextLatencies values={latencies[vercelRegionId][displayLatency]} total={queryCount} />*/ :
