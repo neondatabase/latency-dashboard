@@ -276,7 +276,7 @@ export default function Page() {
             </Flex>
             <div className='mt-1'>
               {latencies[vercelRegionId].edgeToNeon.length === 0 ?
-                <Text>{runStage === RunStage.Latencies ? 'Waiting ...' : '—'}</Text> :
+                <Text className='mt-2'>{runStage === RunStage.Latencies ? 'Waiting ...' : undefined}</Text> :
                 visualisation === Visualisation.BoxPlot ?
                   <PlotLatencies
                     values={latencies[vercelRegionId][displayLatency]}

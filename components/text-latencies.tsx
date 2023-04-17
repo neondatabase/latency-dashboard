@@ -6,9 +6,9 @@ const spacingClass = 'ml-1 mr-1'
 export default function TextLatencies({ values, total }: { values: number[], total: number }) {
   let seenError = false;
   return <div className='mt-3'>
-    <Text>In sequence: {values.map((t, i) => <span className={spacingClass} key={i}>{t < 0 ? errStr : t.toFixed(0)}</span>)}</Text>
+    <Text>In sequence (ms): {values.map((t, i) => <span className={spacingClass} key={i}>{t < 0 ? errStr : t.toFixed(0)}</span>)}</Text>
     {values.length === total &&
-      <Text>By latency: {[...values].sort((a, b) => a - b).map((t, i) => {
+      <Text>By latency (ms): {[...values].sort((a, b) => a - b).map((t, i) => {
         // errors
         if (t < 0) {
           seenError = true;

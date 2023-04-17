@@ -30,13 +30,13 @@ export default function PlotLatencies({ values, max, total, scale }: PlotLatenci
       height: 60,
       autosize: true,
       showlegend: false,
-      margin: { l: 0, r: 0, b: 20, t: 0 },
+      margin: { l: 20, r: 0, b: 20, t: 0 },
       xaxis: {
         zeroline: false,
         ...(scale === 'linear' ? {
-          range: [max * -.05, max * 1.01],
+          range: [0, max * 1.01],
         } : {
-          range: [Math.log10(4), Math.log10(max)],
+          range: [Math.log10(4), Math.log10(max * 2)],
           type: 'log',
           tickmode: 'array',
           tickvals: [
