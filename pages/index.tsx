@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Card, Text, Title, TextInput, Flex, Badge, TabList, Tab, Table, TableBody, TableRow, TableCell, TableHead, Button, Toggle, ToggleItem } from '@tremor/react';
+import { Card, Text, Title, TextInput, Flex, Badge, Button, Toggle, ToggleItem } from '@tremor/react';
 import haversine from 'haversine';
 
 import { regionFromNeonUrl } from '../util/neonUrl';
@@ -9,6 +9,7 @@ import neonIcon from '../components/neon-icon';
 import TextLatencies from '../components/text-latencies';
 import PlotLatencies from '../components/plot-latencies';
 import TextPercentiles from '../components/text-percentiles';
+// import Planet from '../components/planet';
 
 
 type VercelRegions = typeof vercelRegions;
@@ -18,6 +19,16 @@ type VercelRegionsWithDistance = { [RegionId in VercelRegion]: VercelRegions[Reg
 enum DisplayLatency {
   EdgeToNeon = 'edgeToNeon',
   Total = 'total',
+}
+
+enum Visualisation {
+  BoxPlot = '0',
+  RawNumbers = '1',
+}
+
+enum ScaleType {
+  Linear = '0',
+  Log = '1',
 }
 
 enum RunStage {
@@ -44,8 +55,11 @@ export default function Page() {
   const [runStage, setRunStage] = useState(RunStage.Idle);
   const [errMsg, setErrMsg] = useState('');
   const [displayLatency, setDisplayLatency] = useState(DisplayLatency.EdgeToNeon);
+  const [visualisation, setVisualisation] = useState(Visualisation.BoxPlot);
+  const [scaleType, setScaleType] = useState(ScaleType.Linear);
   const [queryCount, setQueryCount] = useState(21);
   const [latencies, setLatencies] = useState(emptyLatencies);
+  const [runningRegionId, setRunningRegionId] = useState<VercelRegion>();
 
   const localMock = typeof location === 'object' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
 
@@ -71,6 +85,33 @@ export default function Page() {
     Object.values(latencies).reduce((memo, l) => Math.max(memo, ...l[displayLatency]), 0),
     [latencies, displayLatency]
   );
+
+  /*
+  // make globe labels
+  const labels = useMemo(() => Object.entries(vercelRegions).map(([vercelRegionId, vercelRegion]) => ({
+    text: vercelRegionId,
+    size: 1.5,
+    lng: vercelRegion.longitude,
+    lat: vercelRegion.latitude,
+  })), []);
+
+  // make globe arcs
+  const arcs = useMemo(() => !neonAwsRegionId ? [] : Object.entries(vercelRegions).map(([vercelRegionId, vercelRegion]) => ({
+    startLng: neonAwsRegion.longitude,
+    startLat: neonAwsRegion.latitude,
+    endLng: vercelRegion.longitude,
+    endLat: vercelRegion.latitude,
+    color: runningRegionId === vercelRegionId ? '#ff0' : '#aaa',
+    stroke: runningRegionId === vercelRegionId ? 1 : undefined,
+  })), [neonAwsRegionId, runningRegionId]);
+
+  // make globe pov
+  const pov = {
+    lng: neonAwsRegionId ? neonAwsRegion.longitude : 0,
+    lat: neonAwsRegionId ? neonAwsRegion.latitude : 0,
+    alt: 100,
+  };
+  */
 
   const showError = (source: 'Browser' | 'Server', msg: string) => {
     setErrMsg(`${errIntro} ${source}: ${msg}`);
@@ -104,9 +145,12 @@ export default function Page() {
   const checkLatencies = async () => {
     setRunStage(RunStage.Latencies);
     for (const vercelRegionId of vercelRegionIds) {
+      setRunningRegionId(vercelRegionId);
+      const regionPromises = [];
+
       for (let i = 0; i < queryCount; i++) {
 
-        void (async function () {  // we don't await this ...
+        regionPromises.push((async function () {
           let data, tTotal;
 
           try {
@@ -114,8 +158,8 @@ export default function Page() {
               const tEdgeToNeon = 5 + 10 * Math.random() + (2 + Math.random()) * vercelRegionsWithDistance[vercelRegionId].neonKm / 30;
               tTotal = tEdgeToNeon + 10 + Math.random() * 50;
               await new Promise(resolve => setTimeout(resolve, tTotal));
-              if (Math.random() < .005) throw new Error('Mock error: browser');
-              data = Math.random() < .005 ? { error: 'Mock error: server' } : { durations: [tEdgeToNeon] };
+              if (Math.random() < .002) throw new Error('Mock error: browser');
+              data = Math.random() < .002 ? { error: 'Mock error: server' } : { durations: [tEdgeToNeon] };
 
             } else {
               const t0 = Date.now();
@@ -147,11 +191,14 @@ export default function Page() {
               edgeToNeon: [...latencies[vercelRegionId].edgeToNeon, ...data.durations],
             }
           }));
-        })();
+        })());
 
-        await new Promise(resolve => setTimeout(resolve, 50));  // ... but we do pause between each request
+        await new Promise(resolve => setTimeout(resolve, 100));  // we pause briefly between each test ...
       }
+
+      await Promise.all(regionPromises); // ... and we wait for every test in the region to finish before starting on the next region
     }
+    setRunningRegionId(undefined);
     setRunStage(RunStage.Idle);
   };
 
@@ -189,53 +236,67 @@ export default function Page() {
         </Button>
       </Flex>}
 
-      <TabList value={edgeProvider} className='mt-4 mb-4'>
-        {Object.entries(EdgeProvider).map(([k, v]) =>
-          <Tab value={v} key={k} text={v} />
-        )}
-      </TabList>
+      {/*<div className='mt-5 mb-5'><Planet arcs={arcs} labels={labels} pov={pov} /></div>*/}
 
-      <Table>
-        <TableHead><TableRow>
-          <TableCell className='w-12'>Edge region</TableCell>
-          <TableCell className='w-12'>Distance</TableCell>
-          <TableCell>
-            RTT (ms)
-            <Toggle value={displayLatency} onValueChange={(value: DisplayLatency) => setDisplayLatency(value)} className='ml-2'>
-              <ToggleItem value={DisplayLatency.EdgeToNeon} text={`Edge <> Neon`} />
-              <ToggleItem value={DisplayLatency.Total} text={`Browser <> Edge <> Neon`} />
-            </Toggle>
-          </TableCell>
-        </TableRow></TableHead>
+      <Flex className='mt-5 mb-5'>
+        <div>
+          <Text className='mb-1'>Show round-trip times</Text>
+          <Toggle value={displayLatency} onValueChange={(value: DisplayLatency) => setDisplayLatency(value)}>
+            <ToggleItem value={DisplayLatency.EdgeToNeon} text={`Edge <> Neon`} />
+            <ToggleItem value={DisplayLatency.Total} text={`Browser <> Edge <> Neon`} />
+          </Toggle>
+        </div>
+        <div className='ml-5'>
+          <Text className='mb-1'>Visualisation</Text>
+          <Toggle value={visualisation} onValueChange={(value: Visualisation) => setVisualisation(value)}>
+            <ToggleItem value={Visualisation.BoxPlot} text={`Box plot`} />
+            <ToggleItem value={Visualisation.RawNumbers} text={`Raw numbers`} />
+          </Toggle>
+        </div>
+        {visualisation === Visualisation.BoxPlot && <div className='ml-5'>
+          <Text className='mb-1'>Box-plot scale</Text>
+          <Toggle value={scaleType} onValueChange={(value: ScaleType) => setScaleType(value)}>
+            <ToggleItem value={ScaleType.Linear} text={`Linear`} />
+            <ToggleItem value={ScaleType.Log} text={`Log`} />
+          </Toggle>
+        </div>}
+        <div className='grow'></div>
+      </Flex>
 
-        <TableBody>
-          {vercelRegionIds.map(vercelRegionId =>
-            <TableRow key={vercelRegionId}>
-              <TableCell>
-                <Badge className='inline-block w-14 text-center mr-2'>{vercelRegionId}</Badge>
-                <Text className='inline-block'>{vercelRegionsWithDistance[vercelRegionId].location}</Text>
-              </TableCell>
-              <TableCell>
-                <Text>
-                  {displayLatency === DisplayLatency.Total && formatKm(vercelRegionsWithDistance[vercelRegionId].clientKm, false) + ' + '}
-                  {formatKm(vercelRegionsWithDistance[vercelRegionId].neonKm)}
-                </Text>
-              </TableCell>
-              <TableCell className='p-1 pt-2'>
-                {latencies[vercelRegionId].edgeToNeon.length > 0 ?
-                  <PlotLatencies values={latencies[vercelRegionId][displayLatency]} max={latencyMax} total={queryCount} />
-                  /*<TextLatencies values={latencies[vercelRegionId][displayLatency]} total={queryCount} />*/ :
-                  runStage === RunStage.Latencies ? 'Waiting ...' : '—'}
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <Card className='mt-5'><Flex>
+      {vercelRegionIds.map(vercelRegionId =>
+        <Card key={vercelRegionId} className='p-4 mb-2' decoration={vercelRegionId === runningRegionId && 'left'}>
+          <div style={{ width: '100%' }}>
+            <Flex>
+              <Badge className='inline-block w-14 text-center mr-2'>{vercelRegionId}</Badge>
+              <Text className='inline-block grow text-left'>{vercelRegionsWithDistance[vercelRegionId].location}
+                {' '}
+                ({displayLatency === DisplayLatency.Total && formatKm(vercelRegionsWithDistance[vercelRegionId].clientKm, false) + ' + '}
+                {formatKm(vercelRegionsWithDistance[vercelRegionId].neonKm)})
+              </Text>
+            </Flex>
+            <div className='mt-1'>
+              {latencies[vercelRegionId].edgeToNeon.length === 0 ?
+                <Text>{runStage === RunStage.Latencies ? 'Waiting ...' : '—'}</Text> :
+                visualisation === Visualisation.BoxPlot ?
+                  <PlotLatencies
+                    values={latencies[vercelRegionId][displayLatency]}
+                    max={latencyMax}
+                    total={queryCount}
+                    scale={scaleType === ScaleType.Linear ? 'linear' : 'log'} /> :
+                  <TextLatencies
+                    values={latencies[vercelRegionId][displayLatency]}
+                    total={queryCount} />}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {visualisation === Visualisation.RawNumbers && <Card className='mt-5'><Flex>
         <Text className='mr-3'><b>Key to percentiles:</b></Text>
         <TextPercentiles />
         <span className='grow'></span>
-      </Flex></Card>
-    </main>
+      </Flex></Card>}
+
+    </main >
   );
 }
