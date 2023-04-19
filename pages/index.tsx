@@ -6,11 +6,11 @@ import { regionFromNeonUrl } from '../util/neonUrl';
 import awsRegions from '../data/aws-regions.json';
 import vercelRegions from '../data/vercel-regions.json';
 import neonIcon from '../components/neon-icon';
+import SummaryLatencies from '../components/summary-latencies';
 import TextLatencies from '../components/text-latencies';
 import PlotLatencies from '../components/plot-latencies';
 import TextPercentiles from '../components/text-percentiles';
 // import Planet from '../components/planet';
-
 
 type VercelRegions = typeof vercelRegions;
 type VercelRegion = keyof VercelRegions;
@@ -37,9 +37,11 @@ enum RunStage {
   Latencies,
 }
 
+/*
 enum EdgeProvider {
   Vercel = 'Vercel',
 }
+*/
 
 const errIntro = 'Sorry, an error occured.';
 const emptyLatencies = Object.fromEntries(
@@ -49,7 +51,7 @@ const emptyLatencies = Object.fromEntries(
 const formatKm = (km: number, units = true) => km < 0 ? '—' : (km < 100 ? '< 100' : Number(km.toPrecision(2))) + (units ? ' km' : '');
 
 export default function Page() {
-  const [edgeProvider, setEdgeProvider] = useState(EdgeProvider.Vercel);
+  // const [edgeProvider, setEdgeProvider] = useState(EdgeProvider.Vercel);
   const [dbUrl, setDbUrl] = useState('');
   const [clientLocation, setClientLocation] = useState({ city: undefined, longitude: null, latitude: null });
   const [runStage, setRunStage] = useState(RunStage.Idle);
@@ -204,7 +206,7 @@ export default function Page() {
 
   return (
     <main>
-      <Title className='mb-5'>Neon latencies — work in progress</Title>
+      <Title className='mb-5'>Neon serverless driver latencies to Vercel regions</Title>
       <label htmlFor='dbUrl' className='grow'><Text className='mb-1'>Neon connection string</Text></label>
       <TextInput
         id='dbUrl'
@@ -240,21 +242,21 @@ export default function Page() {
 
       <Flex className='mt-5 mb-5'>
         <div>
-          <Text className='mb-1'>Show round-trip times</Text>
+          <Text className='mb-1'>Round-trips</Text>
           <Toggle value={displayLatency} onValueChange={(value: DisplayLatency) => setDisplayLatency(value)}>
             <ToggleItem value={DisplayLatency.EdgeToNeon} text={`Edge <> Neon`} />
             <ToggleItem value={DisplayLatency.Total} text={`Browser <> Edge <> Neon`} />
           </Toggle>
         </div>
-        <div className='ml-5'>
+        {/*<div className='ml-5'>
           <Text className='mb-1'>Visualisation</Text>
           <Toggle value={visualisation} onValueChange={(value: Visualisation) => setVisualisation(value)}>
             <ToggleItem value={Visualisation.BoxPlot} text={`Box plot`} />
             <ToggleItem value={Visualisation.RawNumbers} text={`Raw numbers`} />
           </Toggle>
-        </div>
+        </div>*/}
         {visualisation === Visualisation.BoxPlot && <div className='ml-5'>
-          <Text className='mb-1'>Box-plot scale</Text>
+          <Text className='mb-1'>Scale</Text>
           <Toggle value={scaleType} onValueChange={(value: ScaleType) => setScaleType(value)}>
             <ToggleItem value={ScaleType.Linear} text={`Linear`} />
             <ToggleItem value={ScaleType.Log} text={`Log`} />
@@ -268,15 +270,20 @@ export default function Page() {
           <div style={{ width: '100%' }}>
             <Flex>
               <Badge className='inline-block w-14 text-center mr-2'>{vercelRegionId}</Badge>
-              <Text className='inline-block grow text-left'>{vercelRegionsWithDistance[vercelRegionId].location}
+              <Text className='inline-block text-left'>{vercelRegionsWithDistance[vercelRegionId].location}
                 {' '}
                 ({displayLatency === DisplayLatency.Total && formatKm(vercelRegionsWithDistance[vercelRegionId].clientKm, false) + ' + '}
                 {formatKm(vercelRegionsWithDistance[vercelRegionId].neonKm)})
               </Text>
+              <div className='grow text-right'>
+                <SummaryLatencies 
+                  started={runStage === RunStage.Latencies}
+                  values={latencies[vercelRegionId][displayLatency]} 
+                  total={queryCount} />
+              </div>
             </Flex>
             <div className='mt-1'>
-              {latencies[vercelRegionId].edgeToNeon.length === 0 ?
-                <Text className='mt-2'>{runStage === RunStage.Latencies ? 'Waiting ...' : undefined}</Text> :
+              {latencies[vercelRegionId].edgeToNeon.length === 0 ? undefined :
                 visualisation === Visualisation.BoxPlot ?
                   <PlotLatencies
                     values={latencies[vercelRegionId][displayLatency]}

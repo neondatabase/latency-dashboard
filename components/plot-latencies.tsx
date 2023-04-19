@@ -23,6 +23,8 @@ export default function PlotLatencies({ values, max, total, scale }: PlotLatenci
       boxmean: true,
       line: { width: 1, color: '#1d4ed8' },
       fillcolor: '#dbeafe',
+      hovertemplate: '%{x:.0f} ms',
+      hoveron: 'points',
     }]}
     style={{ width: '100% ' }}
     useResizeHandler={true}
@@ -40,16 +42,16 @@ export default function PlotLatencies({ values, max, total, scale }: PlotLatenci
           type: 'log',
           tickmode: 'array',
           tickvals: [
-            5, 10, 20, 40, 60, 80,
+            5, 
+            10, 20, 40, 60, 80,
             100, 200, 400, 600, 800,
             1000, 2000, 4000, 8000,
-            10000
+            10000, 20000, 40000, 80000
           ],
         }),
       },
     }}
     config={{
-      staticPlot: true,
       displayModeBar: false,
     }}
   />;
