@@ -29,10 +29,10 @@ export default function PlotLatencies({ values, max, total, scale }: PlotLatenci
     style={{ width: '100% ' }}
     useResizeHandler={true}
     layout={{
-      height: 60,
+      height: 80,
       autosize: true,
       showlegend: false,
-      margin: { l: 20, r: 0, b: 20, t: 0 },
+      margin: { l: 20, r: 0, b: 35, t: 0 },
       xaxis: {
         zeroline: false,
         ...(scale === 'linear' ? {

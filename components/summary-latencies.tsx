@@ -16,5 +16,5 @@ export default function SummaryLatencies({ values, total, started }: SummaryLate
 
   const median = sortedValues[10];
   const mean = sortedValues.reduce((memo, x) => memo + x) / sortedValues.length;
-  return <Text>Median: {median.toFixed(0)} ms &nbsp; Mean: {mean.toFixed(0)} ms</Text>
+  return <Text>Mean:&nbsp;{mean.toFixed(0)}&nbsp;ms &nbsp;/&nbsp;&nbsp;Median:&nbsp;{median.toFixed(0)}&nbsp;ms</Text>
 };

@@ -48,7 +48,7 @@ const emptyLatencies = Object.fromEntries(
   Object.entries(vercelRegions).map(([k]) => [k, { total: [] as number[], edgeToNeon: [] as number[] }])
 );
 
-const formatKm = (km: number, units = true) => km < 0 ? '—' : (km < 100 ? '< 100' : Number(km.toPrecision(2))) + (units ? ' km' : '');
+const formatKm = (km: number, units = true) => <>{km < 0 ? '—' : (km < 100 ? <>&lt;&nbsp;100</> : Number(km.toPrecision(2)))}{units && <>&nbsp;km</>}</>;
 
 export default function Page() {
   // const [edgeProvider, setEdgeProvider] = useState(EdgeProvider.Vercel);
@@ -222,13 +222,15 @@ export default function Page() {
         }}
         className='mr-2' />
 
-      {neonAwsRegionId !== undefined && <Flex>
-        <Badge className='mr-2' color={neonAwsRegionId ? 'blue' : 'gray'}>{neonAwsRegionId ? neonAwsRegion.name : 'n/a'}</Badge>
-        <Text>{neonAwsRegionId ? neonAwsRegion.location : 'Incomplete or invalid connection string'}</Text>
-        <Text className='ml-4 mr-4'>|</Text>
-        <Text className='grow'>Browser location: {clientLocation.city ?? 'unknown'}</Text>
+      <Flex>
+        {neonAwsRegionId !== undefined && <Badge
+          className='mr-2'
+          color={neonAwsRegionId ? 'blue' : 'gray'}>
+          {neonAwsRegionId ? neonAwsRegion.name : 'n/a'}
+        </Badge>}
+        <Text className='grow'>{neonAwsRegionId ? neonAwsRegion.location : 'Incomplete or invalid connection string'}</Text>
         <Button
-          className='mt-3'
+          className='mt-3 ml-3'
           disabled={!neonAwsRegionId}
           loading={runStage > RunStage.Idle}
           onClick={testConnection}>
@@ -236,49 +238,53 @@ export default function Page() {
             runStage === RunStage.ConnectionTest ? 'Connecting ...' :
               'Running ...'}
         </Button>
-      </Flex>}
+      </Flex>
 
       {/*<div className='mt-5 mb-5'><Planet arcs={arcs} labels={labels} pov={pov} /></div>*/}
 
-      <Flex className='mt-5 mb-5'>
-        <div>
-          <Text className='mb-1'>Round-trips</Text>
-          <Toggle value={displayLatency} onValueChange={(value: DisplayLatency) => setDisplayLatency(value)}>
-            <ToggleItem value={DisplayLatency.EdgeToNeon} text={`Edge <> Neon`} />
-            <ToggleItem value={DisplayLatency.Total} text={`Browser <> Edge <> Neon`} />
-          </Toggle>
-        </div>
-        {/*<div className='ml-5'>
+      {/*<Flex className='mt-5 mb-5'>*/}
+      <div className='mt-4 mr-4' style={{ float: 'left' }}>
+        <Text>Round-trips</Text>
+        <Toggle value={displayLatency} onValueChange={(value: DisplayLatency) => setDisplayLatency(value)}>
+          <ToggleItem value={DisplayLatency.EdgeToNeon} text={`Edge – Neon`} />
+          <ToggleItem value={DisplayLatency.Total} text={`Browser – Edge – Neon`} />
+        </Toggle>
+      </div>
+      {/*<div className='ml-5'>
           <Text className='mb-1'>Visualisation</Text>
           <Toggle value={visualisation} onValueChange={(value: Visualisation) => setVisualisation(value)}>
             <ToggleItem value={Visualisation.BoxPlot} text={`Box plot`} />
             <ToggleItem value={Visualisation.RawNumbers} text={`Raw numbers`} />
           </Toggle>
         </div>*/}
-        {visualisation === Visualisation.BoxPlot && <div className='ml-5'>
-          <Text className='mb-1'>Scale</Text>
-          <Toggle value={scaleType} onValueChange={(value: ScaleType) => setScaleType(value)}>
-            <ToggleItem value={ScaleType.Linear} text={`Linear`} />
-            <ToggleItem value={ScaleType.Log} text={`Log`} />
-          </Toggle>
-        </div>}
-        <div className='grow'></div>
-      </Flex>
+      {visualisation === Visualisation.BoxPlot && <div className='mt-4 mb-4' style={{ float: 'left' }}>
+        <Text>Scale</Text>
+        <Toggle value={scaleType} onValueChange={(value: ScaleType) => setScaleType(value)}>
+          <ToggleItem value={ScaleType.Linear} text={`Linear`} />
+          <ToggleItem value={ScaleType.Log} text={`Log`} />
+        </Toggle>
+      </div>}
+      <div style={{ clear: 'both' }}></div>
+      {/*<div className='grow'></div>
+      </Flex>*/}
+
+      {displayLatency === DisplayLatency.Total &&
+        <Text className='mt-2 mb-4'>Browser location: {clientLocation.city ?? 'unknown'}</Text>}
 
       {vercelRegionIds.map(vercelRegionId =>
-        <Card key={vercelRegionId} className='p-4 mb-2' decoration={vercelRegionId === runningRegionId && 'left'}>
+        <Card key={vercelRegionId} className='p-4 pb-3 mb-2' decoration={vercelRegionId === runningRegionId && 'left'}>
           <div style={{ width: '100%' }}>
             <Flex>
               <Badge className='inline-block w-14 text-center mr-2'>{vercelRegionId}</Badge>
               <Text className='inline-block text-left'>{vercelRegionsWithDistance[vercelRegionId].location}
                 {' '}
-                ({displayLatency === DisplayLatency.Total && formatKm(vercelRegionsWithDistance[vercelRegionId].clientKm, false) + ' + '}
+                ({displayLatency === DisplayLatency.Total && <>{formatKm(vercelRegionsWithDistance[vercelRegionId].clientKm, false)}{' + '}</>}
                 {formatKm(vercelRegionsWithDistance[vercelRegionId].neonKm)})
               </Text>
               <div className='grow text-right'>
-                <SummaryLatencies 
+                <SummaryLatencies
                   started={runStage === RunStage.Latencies}
-                  values={latencies[vercelRegionId][displayLatency]} 
+                  values={latencies[vercelRegionId][displayLatency]}
                   total={queryCount} />
               </div>
             </Flex>
